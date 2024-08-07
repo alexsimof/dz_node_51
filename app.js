@@ -11,7 +11,82 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 
+app.post('/register', (req, res) => {
+  const userId = randomUUID();
+  const newUser = {
+    id: userId,
+    email: "alex.gmail.com",
+    pass: "[pxnjyfgbcfnm"
+  }
+  res.set({'x-user-id': userId})
+  users.push(newUser);
+  res.status(201).send(users);
 
+});
+
+app.get('/products', (req, res) => {
+  res.send(products);
+});
+
+app.get('/products/:id', (req, res) => {
+  const product = products.find(p => p.id == req.params.id )
+  if (!product) return res.status(404).send("Product not found!")
+  res.send(product)
+});
+
+app.put('/cart/:id', (req, res) => {
+
+  const userId = req.header('x-user-id');
+
+  if (!userId || !users.find(u => u.id === userId)) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+
+  if (!carts[userId]) {
+  carts[userId] = [];
+  }
+
+  const product = products.find(p => p.id == req.params.id);
+  if (!product) return res.status(404).send({ error: 'Product not found' });
+
+  carts[userId].push(product);
+  res.status(200).send(carts[userId]);
+})
+
+app.delete('/cart/:id', (req, res) => {
+  const userId = req.header('x-user-id');
+
+  if (!userId || !users.find(u => u.id === userId)) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+
+  const cart = carts[userId];
+  if (!cart) return res.status(404).send({ error: 'Cart not found' });
+
+  const productIndex = cart.findIndex(p => p.id == req.params.id);
+  if (productIndex === -1) return res.status(404).send({ error: "Product not found in cart"})
+
+  cart.splice(productIndex, 1);
+  res.status(200).send(cart);
+
+})
+
+app.post('/cart/checkout', (req, res) => {
+  const userId = req.header('x-user-id');
+  if (!userId || !users.find(u => u.id === userId)) {
+    return res.status(401).send({ error: 'Unauthorized' });
+  }
+
+  const cart = carts[userId];
+  if (!cart || cart.length === 0) return res.status(400).send({ error: 'Cart is empty' });
+
+  const orderId = randomUUID();
+  orders[orderId] = { userId, items: cart };
+  carts[userId] = [];
+
+  res.status(201).send({ orderId });
+
+})
 
 
 app.listen(PORT, () => {
