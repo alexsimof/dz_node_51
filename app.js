@@ -15,52 +15,51 @@ app.post('/register', (req, res) => {
   const userId = randomUUID();
   const newUser = {
     id: userId,
-    email: "alex.gmail.com",
-    pass: "[pxnjyfgbcfnm"
+    email: req.body.email,
+    pass: req.body.password
   }
   res.set({'x-user-id': userId})
   users.push(newUser);
-  res.status(201).send(users);
+  res.status(201).send(newUser);
 
 });
 
 app.get('/products', (req, res) => {
-  res.send(products);
+  res.status(200).send(products);
 });
 
 app.get('/products/:id', (req, res) => {
   const product = products.find(p => p.id == req.params.id )
   if (!product) return res.status(404).send("Product not found!")
-  res.send(product)
+  res.status(200).send(product);
 });
 
 app.put('/cart/:id', (req, res) => {
 
   const userId = req.header('x-user-id');
-
   if (!userId || !users.find(u => u.id === userId)) {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  if (!carts[userId]) {
-  carts[userId] = [];
+  if (!carts.userId) {
+    carts.userId = [];
   }
 
   const product = products.find(p => p.id == req.params.id);
   if (!product) return res.status(404).send({ error: 'Product not found' });
 
-  carts[userId].push(product);
-  res.status(200).send(carts[userId]);
+  carts.userId.push(product);
+  res.status(200).send(carts.userId);
+
 })
 
 app.delete('/cart/:id', (req, res) => {
   const userId = req.header('x-user-id');
-
   if (!userId || !users.find(u => u.id === userId)) {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  const cart = carts[userId];
+  const cart = carts.userId;
   if (!cart) return res.status(404).send({ error: 'Cart not found' });
 
   const productIndex = cart.findIndex(p => p.id == req.params.id);
@@ -77,14 +76,15 @@ app.post('/cart/checkout', (req, res) => {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  const cart = carts[userId];
+  const cart = carts.userId;
   if (!cart || cart.length === 0) return res.status(400).send({ error: 'Cart is empty' });
 
   const orderId = randomUUID();
-  orders[orderId] = { userId, items: cart };
-  carts[userId] = [];
+  const totalPrice = cart.reduce((acc, curr) => acc + curr.price, 0);
+  orders.orderId = { userId, orderId, totalPrice, items: cart };
+  carts.userId = [];
 
-  res.status(201).send({ orderId });
+  res.status(201).send(orders.orderId);
 
 })
 
@@ -92,3 +92,4 @@ app.post('/cart/checkout', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running at http://${HOST}:${PORT}/`);
 })
+
