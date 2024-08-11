@@ -34,6 +34,8 @@ app.get('/products/:id', (req, res) => {
   res.status(200).send(product);
 });
 
+
+
 app.put('/cart/:id', (req, res) => {
 
   const userId = req.header('x-user-id');
@@ -41,15 +43,25 @@ app.put('/cart/:id', (req, res) => {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  if (!carts.userId) {
-    carts.userId = [];
-  }
-
   const product = products.find(p => p.id == req.params.id);
   if (!product) return res.status(404).send({ error: 'Product not found' });
 
-  carts.userId.push(product);
-  res.status(200).send(carts.userId);
+  const cart = carts.find(cart => cart.userId === userId)
+
+  if (!cart) {
+    const userProducts = [];
+    userProducts.push(product);
+    const cart = {
+      cartId: randomUUID(),
+      userId: userId,
+      userProducts
+    };
+    carts.push(cart)
+    res.status(200).send(carts);
+  } else {
+    cart.userProducts.push(product);
+    res.status(200).send(carts);
+  }
 
 })
 
@@ -59,14 +71,14 @@ app.delete('/cart/:id', (req, res) => {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  const cart = carts.userId;
+  const cart = carts.find(c => c.userId === userId)
   if (!cart) return res.status(404).send({ error: 'Cart not found' });
 
-  const productIndex = cart.findIndex(p => p.id == req.params.id);
+  const productIndex = cart.userProducts.findIndex(p => p.id == req.params.id);
   if (productIndex === -1) return res.status(404).send({ error: "Product not found in cart"})
 
-  cart.splice(productIndex, 1);
-  res.status(200).send(cart);
+  cart.userProducts.splice(productIndex, 1);
+  res.status(200).send(carts);
 
 })
 
@@ -76,15 +88,23 @@ app.post('/cart/checkout', (req, res) => {
     return res.status(401).send({ error: 'Unauthorized' });
   }
 
-  const cart = carts.userId;
-  if (!cart || cart.length === 0) return res.status(400).send({ error: 'Cart is empty' });
+  const cart = carts.find(c => c.userId === userId);
+  if (!cart) return res.status(404).send({ error: 'Cart not found' });
 
+  const order = {};
   const orderId = randomUUID();
-  const totalPrice = cart.reduce((acc, curr) => acc + curr.price, 0);
-  orders.orderId = { userId, orderId, totalPrice, items: cart };
-  carts.userId = [];
+  const totalPrice = cart.userProducts.reduce((acc, curr) => acc + curr.price, 0);
 
-  res.status(201).send(orders.orderId);
+  if (order) {
+    order.id = orderId;
+    order.userId = userId;
+    order.products = cart.userProducts;
+    order.price = totalPrice;
+
+    // res.status(200).send(order)
+    orders.push(order);
+    res.status(200).send(orders)
+  }
 
 })
 
