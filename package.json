@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js",
-    "env": "node --env-file=.env app.js"
+    "env": "nodemon --env-file=.env app.js"
   },
   "keywords": [],
   "author": "",

@@ -3,14 +3,13 @@ import { randomUUID } from 'crypto';
 import { users, products, carts, orders } from './storage.js';
 import { CustomError } from "./errorHandler.js";
 import { body, validationResult } from "express-validator";
-import bodyParser from "body-parser";
+
 const app = express();
+app.use(express.json());
 
 // const PORT = 8080;
 // const HOST = 'localhost';
 
-app.use(express.json());
-app.use(bodyParser.json());
 
 
 function isAuth(req, res, next) {
@@ -18,19 +17,27 @@ function isAuth(req, res, next) {
   if (!userId || !users.find(u => u.id === userId)) {
     throw new CustomError(401, "Unauthorized")
   }
-  res.locals = userId;
+  // res.locals = userId;
   next();
 };
 
 
 app.post('/register', [
   body('email').isEmail().withMessage('Invalid email address'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('password')
+    .exists()
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .custom((value) => {
+      const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]/;
+      return regex.test(value);
+    })
+    .withMessage('The password must contain one number, one special character and one uppercase letter.')
   ], (req, res) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    
+    // throw new CustomError(401, errors.array() ) // не работает выводит [object Object]
     return res.status(400).json({ errors: errors.array() });
   }
 
@@ -68,7 +75,7 @@ app.put('/cart/:id', isAuth, (req, res) => {
     throw new CustomError(404, "Product not found!");
   }
 
-  const userId = res.locals;
+  const userId = req.userId;
   const cart = carts.find(cart => cart.userId === userId);
 
   if (!cart) {
