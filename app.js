@@ -134,6 +134,22 @@ app.post('/cart/checkout', isAuth, (req, res) => {
 
 })
 
+app.post('/product', (req, res) => {
+  const id = randomUUID();
+  const newProduct = {
+    id: id,
+    name: req.body.name,
+    description: req.body.description,
+    price: reg.body.price,
+    images: [],
+    video: []
+  }
+  
+})
+
+
+
+
 app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
     message: `Error: ${err.message}`

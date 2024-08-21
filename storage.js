@@ -62,11 +62,7 @@ export const products = [
 ];
 
 export const users = [
-    // {
-    //     "id": "22ea4087-1141-48f5-a493-d705fd1442fa",
-    //     "email": "alex.gmail.com",
-    //     "pass": "[pxnjyfgbcfnm"
-    // },
+    
 ]; // store the list of users here
 
 export const carts = []; // list of carts
