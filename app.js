@@ -11,7 +11,6 @@ app.use(express.json());
 // const HOST = 'localhost';
 
 
-
 function isAuth(req, res, next) {
   const userId = req.header('x-user-id');
   if (!userId || !users.find(u => u.id === userId)) {
