@@ -61,9 +61,7 @@ export const products = [
     }
 ];
 
-export const users = [
-    
-]; // store the list of users here
+export const users = []; // store the list of users here
 
 export const carts = []; // list of carts
 
